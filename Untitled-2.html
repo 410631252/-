@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>小食光點餐系統</title>
+  <style>
+    body {
+      font-family: "Noto Sans TC", sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #fffaf4;
+      color: #333;
+    }
+
+    header {
+      background: #8B4513;
+      color: white;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    header h1 {
+      font-size: 40px;
+      margin: 0;
+      font-family: "Segoe Script", cursive;
+    }
+
+    .page {
+      display: none;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 30px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 80px 20px;
+    }
+
+    .hero h2 {
+      font-size: 32px;
+      color: #8B4513;
+    }
+
+    .hero p {
+      font-size: 18px;
+      color: #5a3d2b;
+      margin: 20px 0;
+    }
+
+    .hero button {
+      padding: 12px 24px;
+      font-size: 18px;
+      background-color: #d2691e;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .hero button:hover {
+      background-color: #b25918;
+    }
+
+    .menu-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .menu-item {
+      background-color: #f4eade;
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      transition: 0.2s;
+    }
+
+    .menu-item:hover {
+      background-color: #e7d4c1;
+    }
+
+    .form-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: space-between;
+      margin: 20px 0;
+    }
+
+    .form-group input {
+      flex: 1;
+      min-width: 180px;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      background: #fdf8f4;
+    }
+
+    button {
+      background-color: #d2691e;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #b25918;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+
+    th, td {
+      border: 1px solid #e0d6cc;
+      padding: 14px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f4eade;
+    }
+
+    tfoot td {
+      font-weight: bold;
+      background-color: #fbf7f3;
+    }
+
+    .delete-btn {
+      color: #a94442;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .delete-btn:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .form-group {
+        flex-direction: column;
+      }
+
+      .form-group input, button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 🎯 餐廳招牌 -->
+  <header>
+    <h1>小食光餐廳</h1>
+    <p>經典家常料理，溫暖你的胃！</p>
+  </header>
+
+  <!-- 📄 首頁區塊 -->
+  <section id="homePage" class="page active">
+    <div class="hero">
+      <h2>歡迎光臨小食光</h2>
+      <p>馬上開始點餐，享受美味的一餐 🍽️</p>
+      <button onclick="switchPage('orderPage')">開始點餐</button>
+    </div>
+  </section>
+
+  <!-- 🍱 點餐頁區塊 -->
+  <section id="orderPage" class="page">
+    <h2>🍛 餐點選單</h2>
+    <div class="menu-list">
+      <div class="menu-item" onclick="selectMenu('紅燒牛肉麵', 130)">紅燒牛肉麵 - $130</div>
+      <div class="menu-item" onclick="selectMenu('雞腿便當', 110)">雞腿便當 - $110</div>
+      <div class="menu-item" onclick="selectMenu('排骨飯', 100)">排骨飯 - $100</div>
+      <div class="menu-item" onclick="selectMenu('滷肉飯', 70)">滷肉飯 - $70</div>
+      <div class="menu-item" onclick="selectMenu('蔬食炒飯', 90)">蔬食炒飯 - $90</div>
+      <div class="menu-item" onclick="selectMenu('珍珠奶茶', 50)">珍珠奶茶 - $50</div>
+      <div class="menu-item" onclick="selectMenu('烤雞沙拉', 120)">烤雞沙拉 - $120</div>
+    </div>
+
+    <h2>📝 建立訂單</h2>
+    <div class="form-group">
+      <input type="text" id="product" placeholder="餐點名稱" required>
+      <input type="number" id="quantity" placeholder="數量" min="1" value="1">
+      <input type="number" id="price" placeholder="單價" min="0" value="0">
+      <button onclick="addOrder()">加入訂單</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>餐點</th>
+          <th>數量</th>
+          <th>單價</th>
+          <th>小計</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="orderTable">
+        <!-- 自動插入 -->
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3">總金額</td>
+          <td id="total">$0</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </section>
+
+  <!-- ✅ JavaScript 功能區 -->
+  <script>
+    let orders = [];
+
+    function switchPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+    }
+
+    function selectMenu(name, price) {
+      document.getElementById('product').value = name;
+      document.getElementById('price').value = price;
+      document.getElementById('quantity').value = 1;
+    }
+
+    function addOrder() {
+      const product = document.getElementById('product').value.trim();
+      const quantity = parseInt(document.getElementById('quantity').value);
+      const price = parseInt(document.getElementById('price').value);
+
+      if (!product || quantity <= 0 || price < 0 || isNaN(price) || isNaN(quantity)) {
+        alert("請輸入正確的餐點資訊！");
+        return;
+      }
+
+      const order = {
+        product,
+        quantity,
+        price,
+        subtotal: quantity * price
+      };
+
+      orders.push(order);
+      renderTable();
+      clearInputs();
+    }
+
+    function renderTable() {
+      const table = document.getElementById('orderTable');
+      table.innerHTML = "";
+
+      let total = 0;
+
+      orders.forEach((item, index) => {
+        total += item.subtotal;
+        const row = `<tr>
+          <td>${item.product}</td>
+          <td>${item.quantity}</td>
+          <td>$${item.price}</td>
+          <td>$${item.subtotal}</td>
+          <td><span class="delete-btn" onclick="deleteOrder(${index})">刪除</span></td>
+        </tr>`;
+        table.innerHTML += row;
+      });
+
+      document.getElementById('total').innerText = `$${total}`;
+    }
+
+    function deleteOrder(index) {
+      orders.splice(index, 1);
+      renderTable();
+    }
+
+    function clearInputs() {
+      document.getElementById('product').value = '';
+      document.getElementById('quantity').value = 1;
+      document.getElementById('price').value = 0;
+    }
+  </script>
+</body>
+</html>
