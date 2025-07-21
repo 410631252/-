@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>小食光點餐系統</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>小食光餐廳</h1>
+    <p>經典家常料理，溫暖你的胃！</p>
+  </header>
+
+  <section id="homePage" class="page active">
+    <div class="hero">
+      <h2>歡迎光臨小食光</h2>
+      <p>馬上開始點餐，享受美味的一餐 🍽️</p>
+      <button onclick="switchPage('orderPage')">開始點餐</button>
+    </div>
+  </section>
+
+  <section id="orderPage" class="page">
+    <h2>🍛 餐點選單</h2>
+    <div id="menuContainer"></div>
+
+    <h2>📝 建立訂單</h2>
+    <div class="form-group">
+      <input type="text" id="product" placeholder="餐點名稱" required />
+      <input type="number" id="quantity" placeholder="數量" min="1" value="1" />
+      <input type="number" id="price" placeholder="單價" min="0" value="0" />
+      <button onclick="addOrder()">加入訂單</button>
+      <button onclick="checkout()">結帳</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>餐點</th>
+          <th>數量</th>
+          <th>單價</th>
+          <th>小計</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="orderTable"></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3">總金額</td>
+          <td id="total">$0</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </section>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
