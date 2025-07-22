@@ -137,11 +137,23 @@ function checkout() {
     alert("訂單為空！");
     return;
   }
-  const summary = orders.map((o) => `${o.product} x${o.quantity} = $${o.subtotal}`).join("\n");
-  const total = orders.reduce((sum, o) => sum + o.subtotal, 0);
-  alert(`訂單確認：\n${summary}\n\n總金額：$${total}`);
-  orders = [];
-  renderTable();
+
+  fetch("http://localhost:3000/api/orders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(orders),
+  })
+    .then(res => res.json())
+    .then(data => {
+      alert("訂單已送出！\n" + data.message);
+      orders = [];
+      renderTable();
+    })
+    .catch(err => {
+      console.error("送出失敗：", err);
+      alert("送出訂單失敗！");
+    });
 }
+
 
 renderMenu();
