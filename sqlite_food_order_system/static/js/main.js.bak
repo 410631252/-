@@ -1,0 +1,364 @@
+// 全局變數
+let currentUser = null;
+let menuData = {};
+let cartItems = [];
+
+// 頁面初始化
+document.addEventListener('DOMContentLoaded', async () => {
+    await checkAuthStatus();
+    await loadMenu();
+});
+
+// 簡單的認證相關函數
+async function checkAuthStatus() {
+    const userId = localStorage.getItem('userId');
+    const userName = localStorage.getItem('userName');
+    if (userId && userName) {
+        currentUser = { user_id: userId, name: userName };
+        showAuthenticatedUI();
+    }
+}
+
+function showAuthenticatedUI() {
+    document.getElementById('authPage').classList.remove('active');
+    document.getElementById('homePage').classList.add('active');
+    document.getElementById('userNav').classList.remove('hidden');
+    document.getElementById('welcomeMsg').textContent = `歡迎，${currentUser.name}`;
+}
+
+async function startOrder() {
+    const userName = document.getElementById('userName').value.trim();
+    
+    if (!userName) {
+        showToast('請輸入您的大名');
+        return;
+    }
+
+    // 生成一個簡單的使用者ID
+    const userId = 'user_' + new Date().getTime();
+    
+    // 儲存使用者資訊
+    currentUser = {
+        user_id: userId,
+        name: userName
+    };
+
+    // 儲存到本地存儲
+    localStorage.setItem('userId', userId);
+    localStorage.setItem('userName', userName);
+
+    showToast('歡迎光臨！');
+    showAuthenticatedUI();
+}
+
+function logout() {
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userName');
+    currentUser = null;
+    cartItems = [];
+    location.reload();
+}
+
+// 頁面初始化
+document.addEventListener('DOMContentLoaded', async () => {
+    await checkAuthStatus();
+    await loadMenu();
+});
+
+// 簡單的認證相關函數
+async function checkAuthStatus() {
+    const userId = localStorage.getItem('userId');
+    const userName = localStorage.getItem('userName');
+    if (userId && userName) {
+        currentUser = { user_id: userId, name: userName };
+        showAuthenticatedUI();
+    }
+}
+
+function showAuthenticatedUI() {
+    document.getElementById('authPage').classList.remove('active');
+    document.getElementById('homePage').classList.add('active');
+    document.getElementById('userNav').classList.remove('hidden');
+    document.getElementById('welcomeMsg').textContent = `歡迎，${currentUser.name}`;
+}
+
+async function startOrder() {
+    const userName = document.getElementById('userName').value.trim();
+    
+    if (!userName) {
+        showToast('請輸入您的大名');
+        return;
+    }
+
+    // 生成一個簡單的使用者ID
+    const userId = 'user_' + new Date().getTime();
+    
+    // 儲存使用者資訊
+    currentUser = {
+        user_id: userId,
+        name: userName
+    };
+
+    // 儲存到本地存儲
+    localStorage.setItem('userId', userId);
+    localStorage.setItem('userName', userName);
+
+    showToast('歡迎光臨！');
+    showAuthenticatedUI();
+}
+
+function logout() {
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userName');
+    currentUser = null;
+    cartItems = [];
+    location.reload();
+}
+}
+
+// 菜單相關函數
+async function loadMenu() {
+    try {
+        const response = await fetch('/api/menu');
+        const data = await response.json();
+        if (!data.menu) {
+            showToast('無法載入菜單');
+            return;
+        }
+        
+        menuData = data.menu;
+        
+        // 渲染菜單分類
+        const categories = Object.keys(menuData);
+        const categoriesHtml = categories.map(category => 
+            `<button class="category-btn" onclick="filterMenu('${category}')">${category}</button>`
+        ).join('');
+        document.getElementById('menuCategories').innerHTML = categoriesHtml;
+
+        // 預設顯示第一個分類
+        if (categories.length > 0) {
+            filterMenu(categories[0]);
+        }
+    } catch (error) {
+        console.error('載入菜單失敗:', error);
+        showToast('載入菜單時發生錯誤');
+    }
+}
+
+function filterMenu(category) {
+    // 更新分類按鈕狀態
+    const buttons = document.querySelectorAll('.category-btn');
+    buttons.forEach(btn => {
+        btn.classList.toggle('active', btn.textContent === category);
+    });
+
+    // 渲染該分類的菜品
+    const items = menuData[category];
+    const menuHtml = items.map(item => `
+        <div class="menu-item">
+            <div class="menu-item-content">
+                <h3>${item.name}</h3>
+                <p class="description">${item.description || ''}</p>
+                <p class="price">NT$ ${item.price}</p>
+            </div>
+            <div class="menu-item-actions">
+                <button onclick="addToCart(${item.id})" class="add-to-cart-btn">
+                    <span class="icon">🛒</span>
+                    加入購物車
+                </button>
+            </div>
+        </div>
+    `).join('');
+    
+    document.getElementById('menuContainer').innerHTML = menuHtml;
+}
+
+// 購物車相關函數
+function addToCart(productId) {
+    if (!currentUser) {
+        showToast('請先登入');
+        return;
+    }
+
+    let product = null;
+    for (const category in menuData) {
+        const found = menuData[category].find(item => item.id === productId);
+        if (found) {
+            product = found;
+            break;
+        }
+    }
+
+    if (!product) return;
+
+    const existingItem = cartItems.find(item => item.product_id === productId);
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cartItems.push({
+            product_id: productId,
+            product_name: product.name,
+            price: product.price,
+            quantity: 1
+        });
+    }
+
+    updateCartUI();
+    showToast('已加入購物車');
+}
+
+function updateCartUI() {
+    if (cartItems.length === 0) {
+        document.getElementById('cartItems').innerHTML = `
+            <div class="empty-cart">
+                <p>購物車是空的</p>
+                <p class="hint">請從菜單中選擇餐點</p>
+            </div>
+        `;
+    } else {
+        const cartHtml = cartItems.map((item, index) => `
+            <div class="cart-item">
+                <div class="cart-item-info">
+                    <span class="item-name">${item.product_name}</span>
+                    <div class="item-controls">
+                        <button onclick="updateQuantity(${index}, -1)" ${item.quantity <= 1 ? 'disabled' : ''}>-</button>
+                        <span class="quantity">${item.quantity}</span>
+                        <button onclick="updateQuantity(${index}, 1)">+</button>
+                    </div>
+                </div>
+                <div class="cart-item-price">
+                    <span>NT$ ${item.price * item.quantity}</span>
+                    <button onclick="removeFromCart(${index})" class="remove-btn">×</button>
+                </div>
+            </div>
+        `).join('');
+
+        document.getElementById('cartItems').innerHTML = cartHtml;
+    }
+    
+    const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    document.getElementById('total').textContent = `NT$ ${total}`;
+    document.getElementById('checkoutBtn').disabled = cartItems.length === 0;
+}
+
+function updateQuantity(index, change) {
+    const item = cartItems[index];
+    const newQuantity = item.quantity + change;
+    
+    if (newQuantity > 0) {
+        item.quantity = newQuantity;
+        updateCartUI();
+    } else if (newQuantity === 0) {
+        removeFromCart(index);
+    }
+}
+}
+
+function removeFromCart(index) {
+    cartItems.splice(index, 1);
+    updateCartUI();
+}
+
+// 結帳相關函數
+async function checkout() {
+    if (!currentUser) {
+        showToast('請先登入');
+        return;
+    }
+
+    if (cartItems.length === 0) {
+        showToast('購物車是空的');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/orders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                items: cartItems,
+                customer_name: currentUser.name
+            })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            showToast('訂單已成功送出！');
+            cartItems = [];
+            updateCartUI();
+            switchPage('ordersPage');
+            await loadOrders();
+        } else {
+            showToast(data.error || '結帳失敗');
+        }
+    } catch (error) {
+        console.error('結帳失敗:', error);
+        showToast('結帳時發生錯誤');
+    }
+}
+
+// 訂單相關函數
+function viewMyOrders() {
+    if (!currentUser) {
+        showToast('請先登入');
+        return;
+    }
+    switchPage('ordersPage');
+}
+
+async function loadOrders() {
+    if (!currentUser) {
+        showToast('請先登入');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/orders');
+        const data = await response.json();
+        
+        const ordersHtml = data.orders.map(order => `
+            <div class="order-card">
+                <h3>訂單時間: ${new Date(order.order_time).toLocaleString()}</h3>
+                <p>訂單狀態: ${order.status}</p>
+                <div class="order-items">
+                    ${order.items.map(item => `
+                        <div class="order-item">
+                            ${item.product_name} x ${item.quantity} = $${item.subtotal}
+                        </div>
+                    `).join('')}
+                </div>
+                <p class="order-total">總金額: $${order.total_price}</p>
+            </div>
+        `).join('');
+
+        document.getElementById('ordersList').innerHTML = ordersHtml || '<p>尚無訂單記錄</p>';
+    } catch (error) {
+        console.error('載入訂單失敗:', error);
+        showToast('載入訂單時發生錯誤');
+    }
+}
+
+// 頁面切換函數
+function switchPage(pageId) {
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+    });
+    document.getElementById(pageId).classList.add('active');
+
+    if (pageId === 'ordersPage') {
+        loadOrders();
+    }
+}
+
+// 工具函數
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.remove('hidden');
+    
+    setTimeout(() => {
+        toast.classList.add('hidden');
+    }, 3000);
+}

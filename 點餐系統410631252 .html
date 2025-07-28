@@ -209,7 +209,8 @@
     <div class="form-group">
       <input type="text" id="product" placeholder="餐點名稱" required />
       <input type="number" id="quantity" placeholder="數量" min="1" value="1" />
-      <input type="number" id="price" placeholder="單價" min="0" value="0" />
+      <input type="number" id="price" placeholder="單價" min="0" value="0" readonly />
+      <input type="hidden" id="product_id" value="" />
       <button onclick="addOrder()">加入訂單</button>
       <button onclick="checkout()">結帳</button>
     </div>
@@ -238,41 +239,35 @@
   <script>
     let orders = [];
     let editIndex = null;
-
-    const menuData = {
-      "主餐": [
-        { name: "紅燒牛肉麵", price: 130 },
-        { name: "雞腿便當", price: 110 },
-        { name: "排骨飯", price: 100 },
-        { name: "滷肉飯", price: 70 },
-        { name: "蔬食炒飯", price: 90 },
-        { name: "蕃茄義大利麵", price: 140 },
-        { name: "照燒雞排飯", price: 105 },
-        { name: "炸豬排定食", price: 150 },
-        { name: "咖哩飯", price: 100 },
-        { name: "日式壽司便當", price: 130 },
-        { name: "三杯雞便當", price: 115 },
-        { name: "起司蛋包飯", price: 120 }
-      ],
-      "湯品": [
-        { name: "香菇雞湯", price: 95 },
-        { name: "味噌湯", price: 40 }
-      ],
-      "飲料": [
-        { name: "珍珠奶茶", price: 50 },
-        { name: "炸雞塊套餐", price: 105 }
-      ],
-      "小菜": [
-        { name: "滷味拼盤", price: 90 },
-        { name: "烤雞沙拉", price: 120 },
-        { name: "炒泡麵", price: 80 },
-        { name: "花雕雞煲", price: 160 }
-      ]
-    };
+    let menuData = {};
+    let userId = null;
 
     function switchPage(pageId) {
       document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
       document.getElementById(pageId).classList.add("active");
+    }
+
+    async function init() {
+      try {
+        // 獲取用戶ID
+        const userResponse = await fetch('/api/user/current');
+        const userData = await userResponse.json();
+        userId = userData.user_id;
+        document.getElementById('userIdDisplay').textContent = userId;
+
+        // 獲取菜單
+        const menuResponse = await fetch('/api/menu');
+        const menuData = await menuResponse.json();
+        menuData = menuData.menu;
+        renderMenu();
+      } catch (error) {
+        console.error('初始化失敗:', error);
+        alert('系統初始化失敗，請刷新頁面重試');
+      }
+    }
+
+    function viewMyOrders() {
+      window.location.href = `/orders?user_id=${userId}`;
     }
 
     function renderMenu() {
@@ -295,6 +290,7 @@
           itemDiv.onclick = () => {
             document.getElementById("product").value = item.name;
             document.getElementById("price").value = item.price;
+            document.getElementById("product_id").value = item.id;
             document.getElementById("quantity").value = 1;
           };
           menuListDiv.appendChild(itemDiv);
@@ -309,13 +305,15 @@
       const product = document.getElementById("product").value.trim();
       const quantity = parseInt(document.getElementById("quantity").value);
       const price = parseInt(document.getElementById("price").value);
+      const product_id = document.getElementById("product_id").value;
 
-      if (!product || quantity <= 0 || price < 0 || isNaN(price) || isNaN(quantity)) {
-        alert("請輸入正確的餐點資訊！");
+      if (!product || quantity <= 0 || price < 0 || !product_id || isNaN(price) || isNaN(quantity)) {
+        alert("請選擇正確的餐點！");
         return;
       }
 
       const order = {
+        product_id,
         product,
         quantity,
         price,
@@ -375,19 +373,45 @@
       document.getElementById("price").value = 0;
     }
 
-    function checkout() {
+    async function checkout() {
       if (orders.length === 0) {
         alert("訂單為空！");
         return;
       }
-      const summary = orders.map((o) => `${o.product} x${o.quantity} = $${o.subtotal}`).join("\n");
-      const total = orders.reduce((sum, o) => sum + o.subtotal, 0);
-      alert(`訂單確認：\n${summary}\n\n總金額：$${total}`);
-      orders = [];
-      renderTable();
+
+      try {
+        const orderData = {
+          customer_name: "顧客",
+          items: orders.map(item => ({
+            product_id: parseInt(item.product_id),
+            quantity: item.quantity
+          }))
+        };
+
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(orderData)
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+          alert(`訂單已成功送出！\n訂單編號：${result.order_id}\n總金額：$${result.total_price}`);
+          orders = [];
+          renderTable();
+        } else {
+          alert(`訂單送出失敗：${result.error}`);
+        }
+      } catch (error) {
+        console.error('送出訂單失敗:', error);
+        alert('送出訂單時發生錯誤，請重試');
+      }
     }
 
-    renderMenu();
+    fetchMenu(); // 改用 fetchMenu 來獲取並顯示菜單
   </script>
 </body>
 </html>

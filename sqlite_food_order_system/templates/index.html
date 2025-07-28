@@ -9,50 +9,70 @@
   <header>
     <h1>小食光餐廳</h1>
     <p>經典家常料理，溫暖你的胃！</p>
+    <nav id="userNav" class="hidden">
+      <span id="welcomeMsg"></span>
+      <button onclick="logout()" class="nav-btn">登出</button>
+    </nav>
   </header>
 
-  <section id="homePage" class="page active">
+  <section id="authPage" class="page active">
+    <div class="auth-container">
+      <div class="auth-form">
+        <h2>開始點餐</h2>
+        <div class="form-group">
+          <input type="text" id="userName" placeholder="您的大名" required />
+          <button onclick="startOrder()">開始點餐</button>
+        </div>
+        <p class="hint">直接輸入您的大名即可開始點餐！</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="homePage" class="page">
     <div class="hero">
       <h2>歡迎光臨小食光</h2>
       <p>馬上開始點餐，享受美味的一餐 🍽️</p>
-      <button onclick="switchPage('orderPage')">開始點餐</button>
+      <div class="button-group">
+        <button onclick="switchPage('orderPage')" class="primary-btn">開始點餐</button>
+        <button onclick="viewMyOrders()" class="secondary-btn">查看我的訂單</button>
+      </div>
     </div>
   </section>
 
   <section id="orderPage" class="page">
-    <h2>🍛 餐點選單</h2>
-    <div id="menuContainer"></div>
-
-    <h2>📝 建立訂單</h2>
-    <div class="form-group">
-      <input type="text" id="product" placeholder="餐點名稱" required />
-      <input type="number" id="quantity" placeholder="數量" min="1" value="1" />
-      <input type="number" id="price" placeholder="單價" min="0" value="0" />
-      <button onclick="addOrder()">加入訂單</button>
-      <button onclick="checkout()">結帳</button>
+    <div class="menu-container">
+      <h2>🍛 餐點選單</h2>
+      <div class="menu-categories" id="menuCategories"></div>
+      <div id="menuContainer" class="menu-items"></div>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>餐點</th>
-          <th>數量</th>
-          <th>單價</th>
-          <th>小計</th>
-          <th>操作</th>
-        </tr>
-      </thead>
-      <tbody id="orderTable"></tbody>
-      <tfoot>
-        <tr>
-          <td colspan="3">總金額</td>
-          <td id="total">$0</td>
-          <td></td>
-        </tr>
-      </tfoot>
-    </table>
+    <div class="order-summary">
+      <h2>📝 您的訂單</h2>
+      <div class="cart-items" id="cartItems">
+        <!-- 購物車項目將在這裡動態添加 -->
+      </div>
+      
+      <div class="order-total">
+        <div class="total-amount">
+          總金額：<span id="total">$0</span>
+        </div>
+        <button onclick="checkout()" class="checkout-btn" id="checkoutBtn" disabled>
+          結帳
+        </button>
+      </div>
+    </div>
   </section>
 
-  <script src="js/main.js"></script>
+  <section id="ordersPage" class="page">
+    <h2>我的訂單記錄</h2>
+    <div class="orders-list" id="ordersList">
+      <!-- 訂單記錄將在這裡動態添加 -->
+    </div>
+  </section>
+
+  <!-- 提示訊息 -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

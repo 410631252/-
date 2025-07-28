@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>訂單管理系統</title>
+  <style>
+    body {
+      font-family: "Noto Sans TC", sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #fffaf4;
+      color: #333;
+    }
+
+    header {
+      background: #8B4513;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .order-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #fff;
+    }
+
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 10px;
+    }
+
+    .order-items {
+      margin: 10px 0;
+    }
+
+    .order-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px dashed #eee;
+    }
+
+    .order-total {
+      text-align: right;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .order-status {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .status-pending {
+      background: #ffd700;
+      color: #000;
+    }
+
+    .status-processing {
+      background: #87ceeb;
+      color: #000;
+    }
+
+    .status-completed {
+      background: #90ee90;
+      color: #000;
+    }
+
+    .status-cancelled {
+      background: #ff6b6b;
+      color: #fff;
+    }
+
+    .refresh-btn {
+      background: #8B4513;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .refresh-btn:hover {
+      background: #704012;
+    }
+
+    .no-orders {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .dashboard {
+      margin-bottom: 20px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      flex: 1;
+    }
+
+    .stat-card h3 {
+      margin: 0 0 10px 0;
+      color: #8B4513;
+    }
+
+    .stat-card p {
+      margin: 5px 0;
+      color: #666;
+    }
+
+    .order-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .action-btn {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .action-btn.complete {
+      background: #90ee90;
+      color: #000;
+    }
+
+    .action-btn.cancel {
+      background: #ff6b6b;
+      color: #fff;
+    }
+
+    .filter-section {
+      margin: 20px 0;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .filter-section input {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .filter-btn {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      background: #8B4513;
+      color: white;
+      cursor: pointer;
+    }
+
+    .filter-btn.clear {
+      background: #666;
+    }
+
+    .filter-btn:hover {
+      opacity: 0.9;
+    }
+
+    .secondary-btn {
+      background: #666;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    .user-id {
+      margin: 10px 0;
+      padding: 10px;
+      background: rgba(139, 69, 19, 0.1);
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+      
+      .stats {
+        flex-direction: column;
+      }
+
+      .filter-section {
+        flex-direction: column;
+      }
+
+      .filter-section input,
+      .filter-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>小食光餐廳 - 訂單管理系統</h1>
+  </header>
+
+  <div class="container">
+    <div class="dashboard">
+      <div class="stats">
+        <div class="stat-card">
+          <h3>即時統計</h3>
+          <p>在線使用者：<span id="activeUsers">0</span></p>
+          <p>待處理訂單：<span id="pendingOrders">0</span></p>
+          <p>今日訂單：<span id="todayOrders">0</span></p>
+        </div>
+      </div>
+      <div class="filter-section">
+        <input type="text" id="userIdFilter" placeholder="輸入用戶ID進行篩選" />
+        <button class="filter-btn" onclick="filterOrders()">篩選</button>
+        <button class="filter-btn clear" onclick="clearFilter()">清除篩選</button>
+      </div>
+      <button class="refresh-btn" onclick="fetchOrders()">重新整理訂單</button>
+    </div>
+    <div id="ordersContainer">
+      <!-- 訂單將在這裡動態載入 -->
+    </div>
+  </div>
+
+  <script>
+    let allOrders = [];
+    let filteredUserId = '';
+
+    async function fetchOrders() {
+      try {
+        // 獲取訂單
+        const ordersResponse = await fetch('http://localhost:3000/api/orders');
+        const ordersData = await ordersResponse.json();
+        
+        // 獲取在線使用者
+        const usersResponse = await fetch('http://localhost:3000/api/users/active');
+        const usersData = await usersResponse.json();
+        
+        updateStats(ordersData.orders, usersData.active_users);
+        renderOrders(ordersData.orders);
+      } catch (error) {
+        console.error('獲取資料失敗:', error);
+        alert('獲取資料失敗，請重試');
+      }
+    }
+
+    function updateStats(orders, activeUsers) {
+      document.getElementById('activeUsers').textContent = activeUsers;
+      
+      const pendingOrders = orders.filter(order => order.status === 'pending').length;
+      document.getElementById('pendingOrders').textContent = pendingOrders;
+      
+      const today = new Date().toISOString().split('T')[0];
+      const todayOrders = orders.filter(order => order.order_time.startsWith(today)).length;
+      document.getElementById('todayOrders').textContent = todayOrders;
+    }
+
+    function formatDateTime(dateTimeStr) {
+      const dt = new Date(dateTimeStr);
+      return `${dt.getFullYear()}/${(dt.getMonth() + 1).toString().padStart(2, '0')}/${dt.getDate().toString().padStart(2, '0')} ${dt.getHours().toString().padStart(2, '0')}:${dt.getMinutes().toString().padStart(2, '0')}`;
+    }
+
+    function filterOrders() {
+      filteredUserId = document.getElementById('userIdFilter').value.trim();
+      if (filteredUserId) {
+        const filtered = allOrders.filter(order => order.user_id === filteredUserId);
+        renderOrders(filtered);
+      } else {
+        renderOrders(allOrders);
+      }
+    }
+
+    function clearFilter() {
+      document.getElementById('userIdFilter').value = '';
+      filteredUserId = '';
+      renderOrders(allOrders);
+    }
+
+    function renderOrders(orders) {
+      const container = document.getElementById('ordersContainer');
+      allOrders = orders; // 保存所有訂單的副本
+      
+      if (!orders || orders.length === 0) {
+        container.innerHTML = '<div class="no-orders">目前沒有訂單</div>';
+        return;
+      }
+
+      container.innerHTML = orders.reverse().map(order => `
+        <div class="order-card">
+          <div class="order-header">
+            <div>
+              <strong>訂單編號:</strong> #${order.id}
+              <br>
+              <strong>顧客:</strong> ${order.customer_name}
+              <br>
+              <strong>時間:</strong> ${formatDateTime(order.order_time)}
+              <br>
+              <strong>使用者 ID:</strong> ${order.user_id}
+              <br>
+              <strong>IP 位址:</strong> ${order.ip_address}
+            </div>
+            <span class="order-status status-${order.status}">${getStatusText(order.status)}</span>
+          </div>
+          <div class="order-items">
+            ${order.items.map(item => `
+              <div class="order-item">
+                <span>${item.product_name} × ${item.quantity}</span>
+                <span>$${item.subtotal}</span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="order-total">
+            總金額: $${order.total_price}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 初次載入時獲取訂單
+    fetchOrders();
+
+    function getStatusText(status) {
+      const statusMap = {
+        'pending': '待處理',
+        'processing': '處理中',
+        'completed': '已完成',
+        'cancelled': '已取消'
+      };
+      return statusMap[status] || status;
+    }
+
+    // 每30秒自動更新一次
+    setInterval(fetchOrders, 30000);
+  </script>
+</body>
+</html>
